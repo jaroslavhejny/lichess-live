@@ -1,32 +1,26 @@
-# Sledování šachové partie
+# Chess Broadcast Watcher
 
-Skript sleduje živý Lichess Broadcast stream. Oznámí začátek partie i každý nový tah; po výsledku se ukončí. Výchozí kolo je [první partie MS 2026](https://lichess.org/broadcast/fide-world-chess-championship-2026/game-1/xLgOJ6cb).
+Watch live Lichess broadcasts and receive notifications for new moves, evaluation changes, and game results. The watcher stops when the selected game ends.
 
 ```sh
 npm install
-npm start
+npm run broadcast
 ```
 
-Nech terminál a Mac běžet; uspání počítače sledování pozastaví. Ukončení ručně: Ctrl+C. Pro oznámení povol v macOS Script Editor i v režimu Soustředění. `npm run test` postupně zobrazí všechny typy oznámení. Jednotlivé typy lze vyzkoušet například pomocí `npm run test -- souhrn`; dostupné jsou `start`, `zacatek`, `tah`, `souhrn`, `zmena`, `blunder` a `konec`.
+Choose a live broadcast and then a game from the numbered lists. The available broadcasts depend on what is live on Lichess. If the game finishes while you are choosing, the watcher exits after receiving its result. Press Ctrl+C to stop watching.
 
-Další kolo vyber podle osmiznakového ID v URL přenosu:
+Keep the terminal and computer running; sleep pauses monitoring. Notifications currently require macOS: allow Script Editor notifications, including in Focus mode. On other systems, messages appear in the terminal.
+
+To watch the default broadcast round, use `npm start`. Its default is [game 1 of the 2026 World Chess Championship](https://lichess.org/broadcast/fide-world-chess-championship-2026/game-1/xLgOJ6cb); it does not automatically select the latest round. To specify another round by its eight-character ID:
 
 ```sh
 LICHESS_ROUND=xxxxxxxx npm start
 ```
 
-Volitelně nastav `ANALYSIS_SECONDS` (doba lokální analýzy pozice, výchozí 3 sekundy, rozsah 0,1–60) nebo `LICHESS_TOKEN` (osobní token s oprávněním `study:read`). Neověřené požadavky na broadcasty mohou být výrazně omezené.
+`ANALYSIS_SECONDS` sets the local analysis time per position (default 3 seconds, range 0.1–60). `LICHESS_TOKEN` optionally provides a personal token with `study:read` permission. Unauthenticated broadcast requests may be heavily rate limited.
 
-Hodnocení počítá lokálně Stockfish z npm balíčku, jedním vláknem a odděleně od streamu tahů. Při novém tahu se výpočet starší pozice přeruší. Skript upozorní na možný blunder při zhoršení alespoň o 1,00 pěšce mezi dvěma bezprostředně sousedními pozicemi. Dále upozorní při změně o více než 0,50 pěšce vůči poslednímu oznámenému hodnocení; jinak po 10., 20., 30. a dalších desátých celých tazích, pokud od posledního upozornění na hodnocení uběhlo alespoň 10 tahů. Souhrn obsahuje tah, hodnocení a poslední známé časy bílého a černého; `?` znamená nedostupný čas. Časy jsou z PGN a mezi aktualizacemi neodpočítávají.
+Stockfish runs locally from the npm package using one thread, separately from the move stream. A new move interrupts analysis of the previous position. The watcher reports a possible blunder when the evaluation worsens by at least one pawn between two consecutive evaluated positions. It also reports changes of more than half a pawn from the last reported evaluation, or otherwise provides an update every ten full moves when at least ten moves have elapsed since the last evaluation notification. Updates include the move, evaluation, and last known clock values; `?` means a clock is unavailable. Clocks come from the PGN and do not count down between updates.
 
-Pokud mezi dokončenými hodnoceními proběhne více tahů, nelze blunder spolehlivě připsat jednomu hráči, ale souhrnná změna se přesto sleduje. Výsledky i tahy závisejí na aktualizacích přenosu; po výpadku se stream znovu připojí. Při HTTP 429 skript čeká alespoň minutu.
+When multiple moves occur between completed evaluations, a blunder cannot be reliably attributed to one player, but the overall change is still tracked. Moves and results depend on broadcast updates. The stream reconnects after disconnection. On HTTP 429, requests wait at least one minute before retrying.
 
-## Výběr živého přenosu
-
-```sh
-npm run vyber
-```
-
-Vyber číslo živého broadcastu a následně číslo partie. Skript spustí sledování zvolené partie; ukončíš ho pomocí Ctrl+C. Seznam vychází z aktuálně aktivních přenosů Lichess, takže nabídka závisí na tom, co právě běží. Pokud partie skončí během výběru, sledování skončí po načtení jejího výsledku.
-
-Při HTTP 429 výběr počká minutu a zkusí požadavek znovu. Při omezení streamu sledování počká minutu před dalším připojením.
+To test notifications, run `npm test` to display all examples, or `npm test -- update` for one. Available types are `start`, `game_start`, `move`, `update`, `change`, `blunder`, and `finish`.

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "node watch.js",
-    "vyber": "node select-broadcast.js",
+    "broadcast": "node select-broadcast.js",
     "test": "node test-notification.js"
   },
   "dependencies": {
