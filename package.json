@@ -1,0 +1,13 @@
+{
+  "name": "chess-broadcast-watch",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node watch.js",
+    "test": "node test-notification.js"
+  },
+  "dependencies": {
+    "chess.js": "^1.4.0"
+  }
+}
