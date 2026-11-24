@@ -15,8 +15,18 @@ Další kolo vyber podle osmiznakového ID v URL přenosu:
 LICHESS_ROUND=xxxxxxxx npm start
 ```
 
-Volitelně nastav `INTERVAL_SECONDS` (interval zjišťování cloudového hodnocení, výchozí 30, minimum 10) nebo `LICHESS_TOKEN` (osobní token s oprávněním `study:read`). Neověřené požadavky na broadcasty mohou být výrazně omezené.
+Volitelně nastav `ANALYSIS_SECONDS` (doba lokální analýzy pozice, výchozí 3 sekundy, rozsah 0,1–60) nebo `LICHESS_TOKEN` (osobní token s oprávněním `study:read`). Neověřené požadavky na broadcasty mohou být výrazně omezené.
 
-Hodnocení se zjišťuje odděleně od streamu tahů. Skript upozorní na možný blunder při zhoršení alespoň o 1,00 pěšce mezi dvěma bezprostředně sousedními pozicemi. Dále upozorní při změně o více než 0,50 pěšce vůči poslednímu oznámenému hodnocení; jinak po 10., 20., 30. a dalších desátých celých tazích, pokud od posledního upozornění na hodnocení uběhlo alespoň 10 tahů. Souhrn obsahuje tah, hodnocení a poslední známé časy bílého a černého; `?` znamená nedostupný čas. Časy jsou z PGN a mezi aktualizacemi neodpočítávají.
+Hodnocení počítá lokálně Stockfish z npm balíčku, jedním vláknem a odděleně od streamu tahů. Při novém tahu se výpočet starší pozice přeruší. Skript upozorní na možný blunder při zhoršení alespoň o 1,00 pěšce mezi dvěma bezprostředně sousedními pozicemi. Dále upozorní při změně o více než 0,50 pěšce vůči poslednímu oznámenému hodnocení; jinak po 10., 20., 30. a dalších desátých celých tazích, pokud od posledního upozornění na hodnocení uběhlo alespoň 10 tahů. Souhrn obsahuje tah, hodnocení a poslední známé časy bílého a černého; `?` znamená nedostupný čas. Časy jsou z PGN a mezi aktualizacemi neodpočítávají.
 
-Lichess cloudová analýza je databáze již spočítaných pozic: nemusí být dostupná hned nebo vůbec. Pokud mezi dostupnými hodnoceními proběhne více tahů, nelze blunder spolehlivě připsat jednomu hráči, ale souhrnná změna se přesto sleduje. Různá hloubka analýzy může vést ke kolísání. Výsledky i tahy závisejí na aktualizacích přenosu; po výpadku se stream znovu připojí. Při HTTP 429 skript čeká alespoň minutu.
+Pokud mezi dokončenými hodnoceními proběhne více tahů, nelze blunder spolehlivě připsat jednomu hráči, ale souhrnná změna se přesto sleduje. Výsledky i tahy závisejí na aktualizacích přenosu; po výpadku se stream znovu připojí. Při HTTP 429 skript čeká alespoň minutu.
+
+## Výběr živého přenosu
+
+```sh
+npm run vyber
+```
+
+Vyber číslo živého broadcastu a následně číslo partie. Skript spustí sledování zvolené partie; ukončíš ho pomocí Ctrl+C. Seznam vychází z aktuálně aktivních přenosů Lichess, takže nabídka závisí na tom, co právě běží. Pokud partie skončí během výběru, sledování skončí po načtení jejího výsledku.
+
+Při HTTP 429 výběr počká minutu a zkusí požadavek znovu. Při omezení streamu sledování počká minutu před dalším připojením.

@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "start": "node watch.js",
+    "vyber": "node select-broadcast.js",
     "test": "node test-notification.js"
   },
   "dependencies": {
-    "chess.js": "^1.4.0"
+    "chess.js": "^1.4.0",
+    "stockfish": "^19.0.1"
   }
 }

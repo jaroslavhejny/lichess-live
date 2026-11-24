@@ -1,13 +1,16 @@
 import { Chess } from 'chess.js';
-import { execFile } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
+import { createRequire } from 'node:module';
+import { createInterface } from 'node:readline';
 import { promisify } from 'node:util';
 
 const run = promisify(execFile);
 const round = process.env.LICHESS_ROUND || 'xLgOJ6cb';
 const token = process.env.LICHESS_TOKEN;
-const interval = Number(process.env.INTERVAL_SECONDS || 30);
-if (!/^[a-zA-Z0-9]{8}$/.test(round) || !Number.isFinite(interval) || interval < 10) {
-  console.error('LICHESS_ROUND musí mít 8 znaků a INTERVAL_SECONDS alespoň 10.');
+const selectedGame = process.env.LICHESS_GAME_ID;
+const analysisMs = Number(process.env.ANALYSIS_SECONDS || 3) * 1000;
+if (!/^[a-zA-Z0-9]{8}$/.test(round) || !Number.isFinite(analysisMs) || analysisMs < 100 || analysisMs > 60000) {
+  console.error('LICHESS_ROUND musí mít 8 znaků a ANALYSIS_SECONDS musí být mezi 0.1 a 60.');
   process.exit(1);
 }
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -34,6 +37,37 @@ let finished = false;
 let retryAfter = 0;
 let gameUrl = null;
 let startNotified = false;
+const enginePath = createRequire(import.meta.url)('stockfish').findEngine('lite-single');
+const engine = spawn(process.execPath, [enginePath], { stdio: ['pipe', 'pipe', 'inherit'] });
+let pendingAnalysis = null;
+let engineFailure = null;
+createInterface({ input: engine.stdout }).on('line', line => {
+  if (!pendingAnalysis) return;
+  const match = line.match(/\bscore (cp|mate) (-?\d+)/);
+  if (match && !/\b(?:lowerbound|upperbound)\b/.test(line)) {
+    const value = Number(match[2]) * pendingAnalysis.perspective;
+    pendingAnalysis.value = { [match[1]]: value };
+  }
+  if (line.startsWith('bestmove ')) {
+    const pending = pendingAnalysis;
+    pendingAnalysis = null;
+    pending.resolve(pending.value);
+  }
+});
+function failEngine(error) {
+  engineFailure = error;
+  if (pendingAnalysis) { const pending = pendingAnalysis; pendingAnalysis = null; pending.reject(error); }
+}
+engine.on('error', failEngine);
+engine.on('exit', code => { if (!finished) failEngine(new Error(`Stockfish skončil (kód ${code}).`)); });
+function analyse(fen) {
+  if (engineFailure) return Promise.reject(engineFailure);
+  return new Promise((resolve, reject) => {
+    pendingAnalysis = { resolve, reject, value: null, perspective: fen.split(' ')[1] === 'w' ? 1 : -1 };
+    engine.stdin.write(`position fen ${fen}\ngo movetime ${analysisMs}\n`);
+  });
+}
+
 
 function clocks(game, moves) {
   const comments = new Map(game.getComments().map(({ fen, comment }) => [fen, comment]));
@@ -50,6 +84,7 @@ function processPgn(pgn) {
   const game = new Chess();
   game.loadPgn(pgn);
   const tags = game.getHeaders();
+  if (selectedGame && (tags.GameURL || tags.Site || '').split('/').filter(Boolean).at(-1) !== selectedGame) return;
   if (gameUrl && tags.GameURL && tags.GameURL !== gameUrl) return;
   gameUrl ||= tags.GameURL || null;
   const moves = game.history({ verbose: true });
@@ -57,12 +92,16 @@ function processPgn(pgn) {
   const old = current;
   const follows = old && moves.length >= old.moves.length && (old.signature === '' || signature === old.signature || signature.startsWith(old.signature + ' '));
   if (old && !follows) { console.log('Přenos opravil partii, začínám nové porovnávání hodnocení.'); previousEval = baseline = null; lastEvaluatedSignature = null; lastNoticePly = lastMilestone = 0; }
+  if (pendingAnalysis && old && old.signature !== signature) engine.stdin.write('stop\n');
   current = { game, tags, moves, signature, fen: game.fen(), clocks: clocks(game, moves) };
   if (!startNotified && moves.length > 0 && !['1-0', '0-1', '1/2-1/2'].includes(tags.Result)) {
     notify('Partie začala', `${tags.White || 'Bílý'} – ${tags.Black || 'Černý'}${old ? '' : ' (už probíhá)'}`);
     startNotified = true;
   }
-  if (!old) console.log(`${tags.White || 'Bílý'} – ${tags.Black || 'Černý'}: ${moves.length} půltahů.`);
+  if (!old) {
+    console.log(`${tags.White || 'Bílý'} – ${tags.Black || 'Černý'}: ${moves.length} půltahů.`);
+    if (tags.GameURL || tags.Site) console.log(`Odkaz na partii: ${tags.GameURL || tags.Site}`);
+  }
   else if (follows) for (let i = old.moves.length; i < moves.length; i++) {
     const move = moves[i];
     notify('Nový tah', `${move.color === 'w' ? tags.White || 'Bílý' : tags.Black || 'Černý'}: ${moveLabel(move, i)}`);
@@ -75,16 +114,10 @@ function processPgn(pgn) {
 async function evaluateLoop() {
   while (!finished) {
     const snapshot = current;
-    if (snapshot && snapshot.signature !== lastEvaluatedSignature && Date.now() >= retryAfter) {
+    if (snapshot && snapshot.signature !== lastEvaluatedSignature) {
       try {
-        const response = await fetch(`https://lichess.org/api/cloud-eval?fen=${encodeURIComponent(snapshot.fen)}`, { headers, signal: AbortSignal.timeout(20000) });
-        if (response.status === 429) { retryAfter = Date.now() + 60000; console.error('Lichess omezuje požadavky, další hodnocení nejdříve za minutu.'); }
-        else if (response.status === 404) console.log('Cloudové hodnocení zatím není dostupné.');
-        else if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        else {
-          const data = await response.json();
-          const value = data.pvs?.[0];
-          if (value && (value.cp != null || value.mate != null) && current?.signature === snapshot.signature) {
+        const value = await analyse(snapshot.fen);
+        if (value && current?.signature === snapshot.signature && !finished) {
             const item = { eval: value, count: snapshot.moves.length, signature: snapshot.signature };
             const fullMove = Math.ceil(item.count / 2);
             const context = `${fullMove}. tah, ${formatEval(value)}, ${snapshot.clocks}`;
@@ -95,6 +128,7 @@ async function evaluateLoop() {
               const loss = direct ? (score(previousEval.eval) - score(value)) * (last.color === 'w' ? 1 : -1) : 0;
               if (loss >= 100) {
                 notify('Možný blunder', `${last.color === 'w' ? snapshot.tags.White : snapshot.tags.Black}: ${moveLabel(last, item.count - 1)}; ${formatEval(previousEval.eval)} → ${formatEval(value)}; ${snapshot.clocks}`);
+                if (snapshot.tags.GameURL || snapshot.tags.Site) console.log(`Odkaz na partii: ${snapshot.tags.GameURL || snapshot.tags.Site}`);
                 baseline = item; lastNoticePly = item.count;
               } else if (Math.abs(score(value) - score(baseline.eval)) > 50) {
                 notify('Výrazná změna hodnocení', `${formatEval(baseline.eval)} → ${context}`);
@@ -107,18 +141,18 @@ async function evaluateLoop() {
             }
             previousEval = item;
             lastEvaluatedSignature = item.signature;
-          }
         }
-      } catch (error) { console.error(`Hodnocení selhalo: ${error.message}`); }
+      } catch (error) { console.error(`Hodnocení selhalo: ${error.message}`); return; }
     }
-    await sleep(interval * 1000);
+    await sleep(250);
   }
 }
 async function stream() {
   while (!finished) {
+    if (Date.now() < retryAfter) await sleep(retryAfter - Date.now());
     try {
       const response = await fetch(`https://lichess.org/api/stream/broadcast/round/${round}.pgn?clocks=true`, { headers });
-      if (response.status === 429) { console.error('Stream omezen, čekám 60 sekund.'); await sleep(60000); continue; }
+      if (response.status === 429) { retryAfter = Math.max(retryAfter, Date.now() + 60000); console.error('Stream omezen, čekám 60 sekund.'); continue; }
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       console.log('Stream připojen.');
       let buffer = '';
@@ -145,4 +179,5 @@ notify('Sledování šachu', 'Hello world!');
 void evaluateLoop();
 await stream();
 await notices;
+engine.kill();
 process.exit(0);
