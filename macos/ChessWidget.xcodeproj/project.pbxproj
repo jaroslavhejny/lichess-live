@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		1E896D13D781685E1CF6D4FF /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042129BAA58E0C6FB2FB234D /* BoardView.swift */; };
 		20C93E5B1C730DF608ABBD6C /* Pieces.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 96D4AB679722217E39B17E23 /* Pieces.xcassets */; };
+		28E5B2FBE35E4A1FF210B11E /* LichessToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17AE885E6A87DE8875137FF /* LichessToken.swift */; };
 		29F37E4084C2CB354995EC95 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 61DA9756D0F8EAC30A2792E5 /* Cocoa.framework */; };
 		2DD4F6554EB7C0123FC397E7 /* ChessWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 44BAB900EA8952C17C0AFD9E /* ChessWidgetExtension.appex */; };
 		2E7928C77AF4B4C316128683 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 61DA9756D0F8EAC30A2792E5 /* Cocoa.framework */; };
@@ -16,6 +17,10 @@
 		4D2563093B6C91A910A1C964 /* ChessPositionWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26CCC73C8B7B09E2FA4E9020 /* ChessPositionWidget.swift */; };
 		51E494908F572DE5D6231964 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 338826D92B9009DCC48ACE00 /* Assets.xcassets */; };
 		638595512171D42C630F4E61 /* ChessData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FB1FB1830CC84C1A0907B36 /* ChessData.swift */; };
+		89A54E3AD4899545B8B0ECF4 /* LichessToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17AE885E6A87DE8875137FF /* LichessToken.swift */; };
+		8FADC92697441AA92E8FE297 /* ChessKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3805CD7B105BE0E5F59C92ED /* ChessKit */; };
+		9EC3CC8B6DC78AFF9D44F4EE /* ClockPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50B03C46A522498C51CFD6C2 /* ClockPanel.swift */; };
+		B7502E1941B83846AD3209A9 /* StockfishEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AFF62841881A8DB513F24B8 /* StockfishEngine.swift */; };
 		BE4E87085A86E254BD76A86B /* BroadcastStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB9DA93B9C8EC7DCE7FCB04F /* BroadcastStream.swift */; };
 		C07D0AC47B237A0B69970E59 /* Pieces.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 96D4AB679722217E39B17E23 /* Pieces.xcassets */; };
 		D97F56E69E3C129DD2581C07 /* BoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 042129BAA58E0C6FB2FB234D /* BoardView.swift */; };
@@ -52,11 +57,14 @@
 		338826D92B9009DCC48ACE00 /* Assets.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3FB1FB1830CC84C1A0907B36 /* ChessData.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChessData.swift; sourceTree = "<group>"; };
 		44BAB900EA8952C17C0AFD9E /* ChessWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ChessWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		50B03C46A522498C51CFD6C2 /* ClockPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ClockPanel.swift; sourceTree = "<group>"; };
 		61DA9756D0F8EAC30A2792E5 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.0.sdk/System/Library/Frameworks/Cocoa.framework; sourceTree = DEVELOPER_DIR; };
+		8AFF62841881A8DB513F24B8 /* StockfishEngine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StockfishEngine.swift; sourceTree = "<group>"; };
 		96D4AB679722217E39B17E23 /* Pieces.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Pieces.xcassets; sourceTree = "<group>"; };
 		BB9DA93B9C8EC7DCE7FCB04F /* BroadcastStream.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BroadcastStream.swift; sourceTree = "<group>"; };
 		C79531820B093FABF41F6110 /* ChessWidget.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChessWidget.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9A7BF89AD73FC994C1C331B /* ChessWidgetApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChessWidgetApp.swift; sourceTree = "<group>"; };
+		F17AE885E6A87DE8875137FF /* LichessToken.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LichessToken.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,6 +73,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2E7928C77AF4B4C316128683 /* Cocoa.framework in Frameworks */,
+				8FADC92697441AA92E8FE297 /* ChessKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -113,6 +122,7 @@
 				3FB1FB1830CC84C1A0907B36 /* ChessData.swift */,
 				042129BAA58E0C6FB2FB234D /* BoardView.swift */,
 				96D4AB679722217E39B17E23 /* Pieces.xcassets */,
+				F17AE885E6A87DE8875137FF /* LichessToken.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -131,6 +141,8 @@
 				C9A7BF89AD73FC994C1C331B /* ChessWidgetApp.swift */,
 				338826D92B9009DCC48ACE00 /* Assets.xcassets */,
 				BB9DA93B9C8EC7DCE7FCB04F /* BroadcastStream.swift */,
+				8AFF62841881A8DB513F24B8 /* StockfishEngine.swift */,
+				50B03C46A522498C51CFD6C2 /* ClockPanel.swift */,
 			);
 			path = ChessWidget;
 			sourceTree = "<group>";
@@ -171,6 +183,7 @@
 				3DA8F1689B467CC4FCD92768 /* Frameworks */,
 				7F15954AD79E884F04FBB463 /* Resources */,
 				099B103D2624F1B8F888F927 /* Embed App Extensions */,
+				15924CB1C3A033287978FFF3 /* Embed Stockfish */,
 			);
 			buildRules = (
 			);
@@ -178,6 +191,9 @@
 				9136E76FA9E37D0EDB90DAF8 /* PBXTargetDependency */,
 			);
 			name = ChessWidget;
+			packageProductDependencies = (
+				3805CD7B105BE0E5F59C92ED /* ChessKit */,
+			);
 			productName = ChessWidget;
 			productReference = C79531820B093FABF41F6110 /* ChessWidget.app */;
 			productType = "com.apple.product-type.application";
@@ -209,6 +225,9 @@
 				Base,
 			);
 			mainGroup = 20B2410D8951CD5D38329FDE;
+			packageReferences = (
+				BE0080F3F5DB38E96C1A0096 /* XCLocalSwiftPackageReference "ChessKit" */,
+			);
 			productRefGroup = 50FA915452D5B0798F431A5B /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -239,6 +258,28 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		15924CB1C3A033287978FFF3 /* Embed Stockfish */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Embed Stockfish";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/sh \"${SRCROOT}/scripts/embed-stockfish.sh\"";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		153768CF6E6EFBE5F1BCCD3B /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -248,6 +289,9 @@
 				1E896D13D781685E1CF6D4FF /* BoardView.swift in Sources */,
 				DE13D474230F3793F07FBA18 /* ChessWidgetApp.swift in Sources */,
 				BE4E87085A86E254BD76A86B /* BroadcastStream.swift in Sources */,
+				89A54E3AD4899545B8B0ECF4 /* LichessToken.swift in Sources */,
+				B7502E1941B83846AD3209A9 /* StockfishEngine.swift in Sources */,
+				9EC3CC8B6DC78AFF9D44F4EE /* ClockPanel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -258,6 +302,7 @@
 				638595512171D42C630F4E61 /* ChessData.swift in Sources */,
 				D97F56E69E3C129DD2581C07 /* BoardView.swift in Sources */,
 				4D2563093B6C91A910A1C964 /* ChessPositionWidget.swift in Sources */,
+				28E5B2FBE35E4A1FF210B11E /* LichessToken.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -345,6 +390,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 7K9V9P9ZJ6;
 				ENABLE_APP_SANDBOX = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ChessWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Chess Broadcast Widget";
@@ -369,7 +415,7 @@
 				INFOPLIST_FILE = ChessWidgetExtension/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = cz.lichesswatch.ChessWidget.Board;
+				PRODUCT_BUNDLE_IDENTIFIER = cz.lichesswatch.ChessWidget.GameBoard;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
@@ -440,6 +486,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 7K9V9P9ZJ6;
 				ENABLE_APP_SANDBOX = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ChessWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Chess Broadcast Widget";
@@ -464,7 +511,7 @@
 				INFOPLIST_FILE = ChessWidgetExtension/Info.plist;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = cz.lichesswatch.ChessWidget.Board;
+				PRODUCT_BUNDLE_IDENTIFIER = cz.lichesswatch.ChessWidget.GameBoard;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 5.0;
@@ -502,6 +549,21 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		BE0080F3F5DB38E96C1A0096 /* XCLocalSwiftPackageReference "ChessKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Vendor/ChessKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3805CD7B105BE0E5F59C92ED /* ChessKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BE0080F3F5DB38E96C1A0096 /* XCLocalSwiftPackageReference "ChessKit" */;
+			productName = ChessKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 195E547308D1FFBE0EAC8D0B /* Project object */;
 }
