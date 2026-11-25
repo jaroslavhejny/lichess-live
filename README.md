@@ -26,3 +26,11 @@ Stockfish runs locally from the npm package using one thread, separately from th
 When multiple moves occur between completed evaluations, a blunder cannot be reliably attributed to one player, but the overall change is still tracked. Moves and results depend on broadcast updates. The stream reconnects after disconnection. On HTTP 429, requests wait at least one minute before retrying.
 
 To test notifications, run `npm test` to display all examples, or `npm test -- update` for one. Available types are `start`, `game_start`, `move`, `update`, `change`, `blunder`, and `finish`.
+
+## macOS position widget (prototype)
+
+Open `macos/ChessWidget.xcodeproj` in Xcode and select the same development team for both targets in Signing & Capabilities. The macOS App Group identifier uses that team ID and is shared by both targets. Run the `ChessWidget` app, select a live broadcast and game, then add **Chess Position Board** from the macOS widget gallery. Remove any older **Chess Position** widget. The app and widget require macOS 14 or later and network access.
+
+The widget fetches the current board position from Lichess and asks macOS to refresh after 15 minutes. While the app window is open, it streams the selected broadcast and asks the system to refresh the widget when a move arrives. Enable **Move notifications** in the app to receive notifications; macOS will ask for permission. If several moves arrive together, one notification reports their count. The app must remain open and the computer awake. macOS controls the actual widget refresh time, so the board can lag behind the stream. Stockfish analysis and evaluation notifications remain available in the terminal watcher. Building without signing verifies compilation but does not verify widget registration or shared App Group access.
+
+Chess pieces: Cburnett by Colin M. L. Burnett, sourced from the Lichess piece set and distributed under GPL-2.0-or-later. See `macos/Shared/Pieces.xcassets/LICENSE`.
