@@ -8,5 +8,7 @@
 	<string>$(DEVELOPMENT_TEAM).cz.lichesswatch.chesswidget</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.games</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

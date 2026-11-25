@@ -40,3 +40,29 @@ Keep the selected broadcast, Stockfish analysis, followed-player status checks, 
 
 - Added the Games application category and the Chess Position widget display name. A new signed archive was created at `/tmp/lichess-distribution-check.xcarchive`; both values were checked in its bundled Info.plist files.
 - The official Stockfish executable contains no debug information for either architecture (`dsymutil` reports no debug symbols). App Store Connect may still show the missing dSYM warning; meaningful symbols require a matching upstream dSYM or a new engine build with debug information. Distribution validation and upload have not been rerun.
+
+### Widget placeholder — 2026-11-25
+
+- Widget snapshots outside the gallery now use the saved selection and position. Board graphics remain visible when WidgetKit redacts a placeholder. Signed Release build installed and launched; live widget rendering and registration still need verification. macOS had three registrations of the same extension from different builds.
+
+### Menu game link — 2026-11-25
+
+- Added Open Game to the menu bar and stored the broadcast game URL with new selections. Previously saved selections use the loaded broadcast URL or recover the URL from the stream. Signed Release build installed and launched; browser opening has not been verified interactively.
+
+### Widget startup follow-up — 2026-11-25
+
+- Widget timelines now return the saved position immediately without waiting for Lichess; when no position is saved, they display a waiting message. This removes the widget's independent network refresh while the app is stopped; live updates come from the running app.
+- Signed Release build installed. WidgetKit's installed extension logged `Timeline: displaying saved position` after launch. Visual rendering and a subsequent live move still need verification. Removed the duplicate temporary build registration again.
+
+### Widget timeline and gallery — 2026-11-25
+
+- Confirmed shared data contained a non-initial position while the user saw a placeholder. Timeline entries now start at the current time and keep the position timestamp separately for display. Signed Release build installed; logs show the widget returned the saved position. The root cause and actual visual rendering remain unconfirmed.
+- Re-registered the installed app with Launch Services after the user reported it missing from the widget gallery. Gallery visibility needs user verification. A temporary build registration appeared again during this build; it was left alone while investigating the missing gallery item.
+
+### Widget gallery icon — 2026-11-25
+
+- Added the existing chess app icon assets to the widget target. The signed Release build contains `AppIcon.icns` and icon metadata in the widget extension and was installed. Gallery display and icon-cache refresh remain unverified.
+
+### App and widget icon — 2026-11-25
+
+- Replaced the app icon with an image-generated ivory chess knight on dark green, shared by app and widget. Signed Release build succeeded and was installed; the macOS gallery cache and visual display remain unverified. Source artwork: `macos/Design/chess-app-icon.png`.

@@ -22,6 +22,7 @@ struct Selection: Codable {
     let round: String
     let game: String
     let name: String
+    var gameURL: URL? = nil
 }
 struct SavedPosition: Codable {
     let round: String

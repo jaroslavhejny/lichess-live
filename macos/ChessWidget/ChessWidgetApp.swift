@@ -60,6 +60,11 @@ struct MenuBarContent: View {
             }
         ))
         Divider()
+        if let url = model.selectedGameURL {
+            Link("Open Game", destination: url)
+        } else {
+            Button("Open Game") {}.disabled(true)
+        }
         Button("Open Chess Broadcast") { openWindow(id: "main"); NSApp.activate(ignoringOtherApps: true) }
         Button("Quit Chess Broadcast") { model.shutdown(); NSApp.terminate(nil) }
     }
@@ -201,6 +206,11 @@ final class AppModel: ObservableObject {
     @AppStorage("moveNotificationsEnabled") private var notificationsEnabled = false
     @AppStorage("streamRetryAfter") private var streamRetryAfter = 0.0
     @AppStorage("streamRateLimitDelay") private var streamRateLimitDelay = 0.0
+    var selectedGameURL: URL? {
+        guard let selection else { return nil }
+        if let url = selection.gameURL { return url }
+        return broadcasts.first(where: { $0.id == selection.round })?.round.url?.appendingPathComponent(selection.game)
+    }
     private var monitoringTask: Task<Void, Never>?
     private var startupTask: Task<Void, Never>?
     private var observers: [NSObjectProtocol] = []
@@ -296,7 +306,8 @@ final class AppModel: ObservableObject {
             broadcastClock = nil
             currentNotificationTitle = "Chess Broadcast"
         }
-        let selected = Selection(round: roundID, game: game.id, name: game.label)
+        let gameURL = broadcasts.first(where: { $0.id == roundID })?.round.url?.appendingPathComponent(game.id)
+        let selected = Selection(round: roundID, game: game.id, name: game.label, gameURL: gameURL)
         guard let groupID, !groupID.isEmpty, let defaults = UserDefaults(suiteName: groupID), let data = try? JSONEncoder().encode(selected) else {
             message = "Could not save the selection for the widget."
             return
@@ -408,6 +419,14 @@ final class AppModel: ObservableObject {
                 }) { [self] pgn in
                     guard !Task.isCancelled, let game = parseStreamGame(pgn, gameID: selected.game) else { return }
                     streamStatus = "Live broadcast connected"
+                    if selection?.round == selected.round, selection?.game == selected.game,
+                       selection?.gameURL == nil, let gameURL = game.gameURL, var current = selection {
+                        current.gameURL = gameURL
+                        if let groupID, let defaults = UserDefaults(suiteName: groupID), let data = try? JSONEncoder().encode(current) {
+                            defaults.set(data, forKey: selectionKey)
+                            selection = current
+                        }
+                    }
                     currentNotificationTitle = notificationTitle(game, fallback: selected.name)
                     clockText = visibleClocks(game.clocks)
                     if needsClockSync || previous?.moves != game.moves || previous?.clocks != game.clocks || previous?.result != game.result {

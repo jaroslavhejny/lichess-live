@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -20,6 +20,7 @@
 		638595512171D42C630F4E61 /* ChessData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FB1FB1830CC84C1A0907B36 /* ChessData.swift */; };
 		89A54E3AD4899545B8B0ECF4 /* LichessToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17AE885E6A87DE8875137FF /* LichessToken.swift */; };
 		8FADC92697441AA92E8FE297 /* ChessKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3805CD7B105BE0E5F59C92ED /* ChessKit */; };
+		9466CEA83813B631E69A4B68 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 338826D92B9009DCC48ACE00 /* Assets.xcassets */; };
 		9EC3CC8B6DC78AFF9D44F4EE /* ClockPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50B03C46A522498C51CFD6C2 /* ClockPanel.swift */; };
 		B7502E1941B83846AD3209A9 /* StockfishEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AFF62841881A8DB513F24B8 /* StockfishEngine.swift */; };
 		BE4E87085A86E254BD76A86B /* BroadcastStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB9DA93B9C8EC7DCE7FCB04F /* BroadcastStream.swift */; };
@@ -229,7 +230,7 @@
 			);
 			mainGroup = 20B2410D8951CD5D38329FDE;
 			packageReferences = (
-				BE0080F3F5DB38E96C1A0096 /* XCLocalSwiftPackageReference "ChessKit" */,
+				BE0080F3F5DB38E96C1A0096 /* XCLocalSwiftPackageReference "Vendor/ChessKit" */,
 			);
 			productRefGroup = 50FA915452D5B0798F431A5B /* Products */;
 			projectDirPath = "";
@@ -256,6 +257,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				20C93E5B1C730DF608ABBD6C /* Pieces.xcassets in Resources */,
+				9466CEA83813B631E69A4B68 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -391,14 +393,17 @@
 				CODE_SIGN_ENTITLEMENTS = ChessWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 7K9V9P9ZJ6;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ChessWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Chess Broadcast Widget";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = cz.lichesswatch.ChessWidget;
@@ -410,9 +415,10 @@
 		72B63AE66309020230232DAA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = ChessWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 7K9V9P9ZJ6;
 				ENABLE_APP_SANDBOX = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -474,7 +480,8 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -487,14 +494,17 @@
 				CODE_SIGN_ENTITLEMENTS = ChessWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 7K9V9P9ZJ6;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ChessWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Chess Broadcast Widget";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = cz.lichesswatch.ChessWidget;
@@ -506,9 +516,10 @@
 		C47CCDB7FAB4C4830B36AEE0 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = ChessWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 7K9V9P9ZJ6;
 				ENABLE_APP_SANDBOX = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -555,7 +566,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		BE0080F3F5DB38E96C1A0096 /* XCLocalSwiftPackageReference "ChessKit" */ = {
+		BE0080F3F5DB38E96C1A0096 /* XCLocalSwiftPackageReference "Vendor/ChessKit" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = Vendor/ChessKit;
 		};
@@ -564,7 +575,7 @@
 /* Begin XCSwiftPackageProductDependency section */
 		3805CD7B105BE0E5F59C92ED /* ChessKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = BE0080F3F5DB38E96C1A0096 /* XCLocalSwiftPackageReference "ChessKit" */;
+			package = BE0080F3F5DB38E96C1A0096 /* XCLocalSwiftPackageReference "Vendor/ChessKit" */;
 			productName = ChessKit;
 		};
 /* End XCSwiftPackageProductDependency section */

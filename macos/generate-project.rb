@@ -31,7 +31,9 @@ app.source_build_phase.add_file_reference(app_group.new_file('BroadcastStream.sw
 app.source_build_phase.add_file_reference(app_group.new_file('StockfishEngine.swift'))
 app.source_build_phase.add_file_reference(app_group.new_file('ClockPanel.swift'))
 app.source_build_phase.add_file_reference(app_group.new_file('FollowedPlayers.swift'))
-app.resources_build_phase.add_file_reference(app_group.new_file('Assets.xcassets'))
+assets = app_group.new_file('Assets.xcassets')
+app.resources_build_phase.add_file_reference(assets)
+widget.resources_build_phase.add_file_reference(assets)
 widget.source_build_phase.add_file_reference(widget_group.new_file('ChessPositionWidget.swift'))
 app.add_dependency(widget)
 engine_phase = app.new_shell_script_build_phase('Embed Stockfish')
@@ -62,6 +64,7 @@ end
 widget.build_configurations.each do |config|
   config.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = 'cz.lichesswatch.ChessWidget.GameBoard'
   config.build_settings['INFOPLIST_FILE'] = 'ChessWidgetExtension/Info.plist'
+  config.build_settings['ASSETCATALOG_COMPILER_APPICON_NAME'] = 'AppIcon'
   config.build_settings['SKIP_INSTALL'] = 'YES'
 end
 project.save

@@ -1,5 +1,8 @@
 import SwiftUI
 import WidgetKit
+import OSLog
+
+private let widgetLog = Logger(subsystem: "cz.lichesswatch.ChessWidget", category: "WidgetTimeline")
 
 struct PositionEntry: TimelineEntry {
     let date: Date
@@ -13,36 +16,34 @@ struct PositionProvider: TimelineProvider {
     func placeholder(in context: Context) -> PositionEntry {
         PositionEntry(date: .now, name: "Chess Position", fen: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", status: "", evaluation: nil, details: nil)
     }
-    func getSnapshot(in context: Context, completion: @escaping (PositionEntry) -> Void) { completion(placeholder(in: context)) }
-    func getTimeline(in context: Context, completion: @escaping (Timeline<PositionEntry>) -> Void) {
-        Task {
-            let entry: PositionEntry
-            if let selection = loadSelection() {
-                let saved = loadPosition(for: selection)
-                if let saved, Date().timeIntervalSince(saved.updatedAt) < 90 {
-                    entry = PositionEntry(date: saved.updatedAt, name: selection.name, fen: saved.fen, status: "", evaluation: saved.evaluation, details: saved)
-                } else {
-                    do {
-                        let games = try await fetchGames(round: selection.round, useToken: false)
-                        if let latest = loadPosition(for: selection), latest.updatedAt > (saved?.updatedAt ?? .distantPast) {
-                            entry = PositionEntry(date: latest.updatedAt, name: selection.name, fen: latest.fen, status: "", evaluation: latest.evaluation, details: latest)
-                        } else if let game = games.first(where: { $0.id == selection.game }), let fen = game.fen {
-                            savePosition(fen, for: selection, white: game.players?.first?.name, black: game.players?.dropFirst().first?.name)
-                            let latest = loadPosition(for: selection)
-                            entry = PositionEntry(date: .now, name: game.label, fen: fen, status: "Updated now", evaluation: latest?.fen == fen ? latest?.evaluation : nil, details: latest?.fen == fen ? latest : nil)
-                        } else {
-                            entry = PositionEntry(date: saved?.updatedAt ?? .now, name: selection.name, fen: saved?.fen, status: "Position unavailable", evaluation: saved?.evaluation, details: saved)
-                        }
-                    } catch {
-                        let latest = loadPosition(for: selection) ?? saved
-                        entry = PositionEntry(date: latest?.updatedAt ?? .now, name: selection.name, fen: latest?.fen, status: "Could not load position", evaluation: latest?.evaluation, details: latest)
-                    }
-                }
-            } else {
-                entry = PositionEntry(date: .now, name: "Chess Position", fen: nil, status: "Choose a game in the app", evaluation: nil, details: nil)
-            }
-            completion(Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(15 * 60))))
+    func getSnapshot(in context: Context, completion: @escaping (PositionEntry) -> Void) {
+        if context.isPreview { completion(placeholder(in: context)); return }
+        guard let selection = loadSelection() else {
+            completion(PositionEntry(date: .now, name: "Chess Position", fen: nil, status: "Choose a game in the app", evaluation: nil, details: nil))
+            return
         }
+        let saved = loadPosition(for: selection)
+        completion(PositionEntry(date: .now, name: selection.name, fen: saved?.fen,
+                                 status: saved == nil ? "Waiting for the position" : "", evaluation: saved?.evaluation, details: saved))
+    }
+    func getTimeline(in context: Context, completion: @escaping (Timeline<PositionEntry>) -> Void) {
+        let entry: PositionEntry
+        if let selection = loadSelection() {
+            if let saved = loadPosition(for: selection) {
+                entry = PositionEntry(date: .now, name: selection.name, fen: saved.fen,
+                                      status: "", evaluation: saved.evaluation, details: saved)
+                widgetLog.notice("Timeline: displaying saved position")
+            } else {
+                entry = PositionEntry(date: .now, name: selection.name, fen: nil,
+                                      status: "Waiting for the position from the app", evaluation: nil, details: nil)
+                widgetLog.notice("Timeline: waiting for selected position")
+            }
+        } else {
+            entry = PositionEntry(date: .now, name: "Chess Position", fen: nil,
+                                  status: "Choose a game in the app", evaluation: nil, details: nil)
+            widgetLog.notice("Timeline: no selection")
+        }
+        completion(Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(15 * 60))))
     }
 }
 
@@ -57,6 +58,7 @@ struct PositionWidgetView: View {
                     GeometryReader { geometry in
                         HStack(spacing: 0) {
                             BoardView(fen: fen)
+                                .unredacted()
                                 .frame(width: geometry.size.height, height: geometry.size.height)
                             information
                                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
@@ -64,6 +66,7 @@ struct PositionWidgetView: View {
                     }
                 } else {
                     BoardView(fen: fen)
+                        .unredacted()
                         .overlay(alignment: .bottomTrailing) {
                             if let evaluation = entry.evaluation {
                                 Text(evaluation)
@@ -76,7 +79,7 @@ struct PositionWidgetView: View {
                             }
                         }
                         .overlay(alignment: .topTrailing) {
-                            Text(entry.date, style: .relative).font(.system(size: 9, weight: .semibold))
+                            Text(entry.details?.updatedAt ?? entry.date, style: .relative).font(.system(size: 9, weight: .semibold))
                                 .padding(3).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 4)).padding(3)
                         }
                 }
@@ -108,7 +111,7 @@ struct PositionWidgetView: View {
             }
             HStack(spacing: 3) {
                 Text(entry.status.isEmpty ? "Updated" : entry.status + " ·")
-                Text(entry.date, style: .relative)
+                Text(entry.details?.updatedAt ?? entry.date, style: .relative)
             }.font(.system(size: 8)).foregroundStyle(.secondary).lineLimit(1)
         }
         .padding(.horizontal, 10).padding(.vertical, 8)

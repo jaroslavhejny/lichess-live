@@ -2,6 +2,7 @@ import Foundation
 import ChessKit
 
 struct StreamGame {
+    let gameURL: URL?
     let moves: [String]
     let result: String?
     let fen: String?
@@ -76,7 +77,11 @@ func parseStreamGame(_ pgn: String, gameID: String) -> StreamGame? {
             values[(index + (startsWithBlack ? 1 : 0)) % 2] = String(comments[valueRange]).trimmingCharacters(in: .whitespaces)
         }
     }
-    return StreamGame(moves: moves, result: result, fen: fen, clocks: "\(values[0] ?? "?") – \(values[1] ?? "?")", white: tag("White"), black: tag("Black"))
+    let candidate = tag("GameURL").flatMap(URL.init(string:))
+    let gameURL = candidate.flatMap { url in
+        url.scheme == "https" && url.host?.lowercased() == "lichess.org" && url.lastPathComponent == gameID ? url : nil
+    }
+    return StreamGame(gameURL: gameURL, moves: moves, result: result, fen: fen, clocks: "\(values[0] ?? "?") – \(values[1] ?? "?")", white: tag("White"), black: tag("Black"))
 }
 
 enum StreamError: Error { case rateLimited, invalidResponse, tooLarge }
