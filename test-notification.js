@@ -21,7 +21,7 @@ for (const [index, [key, [title, message]]] of entries.entries()) {
   console.log(`${key}: ${title} — ${message}`);
   if (process.platform === 'darwin') {
     try {
-      await promisify(execFile)('osascript', ['-e', 'on run argv\ndisplay notification (item 2 of argv) with title (item 1 of argv) sound name "Glass"\nend run', title, message]);
+      await promisify(execFile)('osascript', ['-e', 'on run argv\ndisplay notification (item 2 of argv) with title (item 1 of argv)\nend run', title, message]);
     } catch (error) {
       console.error(`Could not display notification: ${error.message}`);
       process.exitCode = 1;

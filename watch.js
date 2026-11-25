@@ -20,7 +20,7 @@ function notify(title, message) {
   console.log(`[${new Date().toLocaleString('en-US')}] ${title}: ${message}`);
   notices = notices.then(async () => {
     if (process.platform !== 'darwin') return;
-    try { await run('osascript', ['-e', 'on run argv\ndisplay notification (item 2 of argv) with title (item 1 of argv) sound name "Glass"\nend run', title, message]); }
+    try { await run('osascript', ['-e', 'on run argv\ndisplay notification (item 2 of argv) with title (item 1 of argv)\nend run', title, message]); }
     catch (error) { console.error(`Could not display notification: ${error.message}`); }
   });
 }

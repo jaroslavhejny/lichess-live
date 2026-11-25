@@ -7,7 +7,7 @@ final class NotificationDelegate: NSObject, NSApplicationDelegate, UNUserNotific
         UNUserNotificationCenter.current().delegate = self
     }
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
-        [.banner, .sound]
+        [.banner]
     }
 }
 
@@ -206,7 +206,7 @@ struct ContentView: View {
 
     @MainActor func enableNotifications() async {
         do {
-            let allowed = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound])
+            let allowed = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert])
             notificationsEnabled = allowed
             if !allowed { message = "Notifications are disabled in System Settings. Allow them there to enable move notifications." }
         } catch {
@@ -237,7 +237,6 @@ struct ContentView: View {
             moveText = "\(game.moves.count - previous.moves.count) new moves"
         }
         content.body = moveText + (visibleClocks(game.clocks).map { "  \($0)" } ?? "") + (evaluation.map { "  \($0)" } ?? "")
-        content.sound = .default
         do { try await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)) }
         catch { await MainActor.run { message = "Could not send notification: \(error.localizedDescription)" } }
     }
@@ -251,7 +250,6 @@ struct ContentView: View {
         let content = UNMutableNotificationContent()
         content.title = gameTitle
         content.body = "\(title) · \(label(previous)) → \(label(current))" + (clocks.map { " · \($0)" } ?? "")
-        content.sound = .default
         do { try await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)) }
         catch { await MainActor.run { message = "Could not send notification: \(error.localizedDescription)" } }
     }
@@ -261,7 +259,6 @@ struct ContentView: View {
         let content = UNMutableNotificationContent()
         content.title = notificationTitle(game, fallback: name)
         content.body = "Game finished · \(result)" + (visibleClocks(game.clocks).map { " · \($0)" } ?? "")
-        content.sound = .default
         do { try await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)) }
         catch { await MainActor.run { message = "Could not send notification: \(error.localizedDescription)" } }
     }
