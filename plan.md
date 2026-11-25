@@ -23,6 +23,7 @@ Keep the selected broadcast, Stockfish analysis, followed-player status checks, 
 
 ### Implemented
 
+- Replaced the menu bar symbol with the same white bishop asset used on the board, rendered to an 22-point image with 85% opacity and added a notification toggle; connection status remains in the menu. Signed Release build succeeded and was installed; interactive menu behavior has not yet been verified.
 - Configured the app as a menu bar agent so it does not appear in the Dock. The signed Release build was installed and launched; System Events reports background-only true.
 - Moved the broadcast watcher, Stockfish, notifications and followed-player polling into app-lifetime models shared by the window and menu bar. Added open and quit actions and prevented termination when the last window closes.
 - Added sleep/wake handling and notification baselines on reconnect or failed player refresh. Game changes cancel the old monitor before starting the next one.
@@ -34,3 +35,8 @@ Keep the selected broadcast, Stockfish analysis, followed-player status checks, 
 - Installed and launched `/Applications/ChessWidget.app`; the application and one embedded Stockfish process were observed. PluginKit lists the widget identifier, but lists multiple registrations, so the active widget instance is not confirmed.
 - The existing app started with a saved selection and Stockfish, but Keychain access was not independently verified. An attempt to inspect the application window via System Events returned no window names; close/reopen behavior was not verified.
 - Still required: verify live moves, analysis, widget updates, friend checks and notifications with the window closed; reopen; switch games and check for duplicate streams/processes; exercise offline, rate limiting, sleep/wake and completed games; verify no historical alerts and record WidgetKit delays. The latest Release build is installed; the live scenarios above still need verification.
+
+### Distribution metadata — 2026-11-25
+
+- Added the Games application category and the Chess Position widget display name. A new signed archive was created at `/tmp/lichess-distribution-check.xcarchive`; both values were checked in its bundled Info.plist files.
+- The official Stockfish executable contains no debug information for either architecture (`dsymutil` reports no debug symbols). App Store Connect may still show the missing dSYM warning; meaningful symbols require a matching upstream dSYM or a new engine build with debug information. Distribution validation and upload have not been rerun.

@@ -28,17 +28,37 @@ struct ChessWidgetApp: App {
         MenuBarExtra {
             MenuBarContent(model: model)
         } label: {
-            Image(systemName: model.selection == nil ? "circle" : (model.streamStatus == "Live broadcast connected" ? "dot.radiowaves.left.and.right" : "wifi.exclamationmark"))
+            Image(nsImage: menuBarBishop)
+                .accessibilityLabel("Chess Broadcast")
         }
     }
 }
 
+private let menuBarBishop: NSImage = {
+    let size = NSSize(width: 22, height: 22)
+    let image = NSImage(size: size, flipped: false) { rect in
+        NSImage(named: "wB")?.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 0.85)
+        return true
+    }
+    image.isTemplate = false
+    return image
+}()
+
 struct MenuBarContent: View {
     @ObservedObject var model: AppModel
     @Environment(\.openWindow) private var openWindow
+    @AppStorage("moveNotificationsEnabled") private var notificationsEnabled = false
     var body: some View {
         Text(model.selection?.name ?? "No game selected")
         Text(model.streamStatus.isEmpty ? "Not monitoring" : model.streamStatus)
+        Divider()
+        Toggle("Notifications", isOn: Binding(
+            get: { notificationsEnabled },
+            set: { enabled in
+                if enabled { Task { await model.enableNotifications() } }
+                else { notificationsEnabled = false }
+            }
+        ))
         Divider()
         Button("Open Chess Broadcast") { openWindow(id: "main"); NSApp.activate(ignoringOtherApps: true) }
         Button("Quit Chess Broadcast") { model.shutdown(); NSApp.terminate(nil) }
