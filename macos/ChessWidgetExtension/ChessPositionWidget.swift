@@ -99,7 +99,9 @@ struct PositionWidgetView: View {
                 Spacer(minLength: 2)
                 metric("EVALUATION", value: entry.evaluation ?? "—")
             }
-            metric("CLOCKS · LAST REPORTED", value: entry.details?.clocks ?? "? – ?")
+            if let clocks = visibleClocks(entry.details?.clocks) {
+                metric("CLOCKS · LAST REPORTED", value: clocks)
+            }
         }
         .padding(.horizontal, 10).padding(.vertical, 8)
     }

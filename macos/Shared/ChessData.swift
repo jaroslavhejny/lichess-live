@@ -4,6 +4,20 @@ let groupID = Bundle.main.object(forInfoDictionaryKey: "ChessAppGroup") as? Stri
 let selectionKey = "selectedGame"
 let positionKey = "latestPosition"
 
+func visibleClocks(_ clocks: String?) -> String? {
+    guard let clocks else { return nil }
+    let parts = clocks.components(separatedBy: " – ")
+    guard parts.count == 2 else { return nil }
+    let white = parts[0].trimmingCharacters(in: .whitespacesAndNewlines)
+    let black = parts[1].trimmingCharacters(in: .whitespacesAndNewlines)
+    let hasWhite = !white.isEmpty && white != "?"
+    let hasBlack = !black.isEmpty && black != "?"
+    if hasWhite && hasBlack { return "\(white) – \(black)" }
+    if hasWhite { return "White \(white)" }
+    if hasBlack { return "Black \(black)" }
+    return nil
+}
+
 struct Selection: Codable {
     let round: String
     let game: String

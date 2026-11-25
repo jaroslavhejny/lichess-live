@@ -58,3 +58,22 @@ func lichessRequest(_ url: URL, useToken: Bool = true) throws -> URLRequest {
     if useToken, let token = try readLichessToken() { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
     return request
 }
+
+struct TokenDetails: Decodable {
+    let userId: String
+    let scopes: String
+}
+
+func checkLichessToken() async throws -> TokenDetails? {
+    guard let token = try readLichessToken() else { return nil }
+    var request = URLRequest(url: URL(string: "https://lichess.org/api/token/test")!)
+    request.httpMethod = "POST"
+    request.setValue("text/plain", forHTTPHeaderField: "Content-Type")
+    request.setValue("ChessBroadcastWidget/1.0", forHTTPHeaderField: "User-Agent")
+    request.httpBody = Data(token.utf8)
+    let (data, response) = try await URLSession.shared.data(for: request)
+    guard let response = response as? HTTPURLResponse else { throw URLError(.badServerResponse) }
+    guard (200..<300).contains(response.statusCode) else { throw LichessHTTPError(status: response.statusCode) }
+    let result = try JSONDecoder().decode([String: TokenDetails?].self, from: data)
+    return result[token] ?? nil
+}

@@ -30,6 +30,7 @@ app.source_build_phase.add_file_reference(app_group.new_file('ChessWidgetApp.swi
 app.source_build_phase.add_file_reference(app_group.new_file('BroadcastStream.swift'))
 app.source_build_phase.add_file_reference(app_group.new_file('StockfishEngine.swift'))
 app.source_build_phase.add_file_reference(app_group.new_file('ClockPanel.swift'))
+app.source_build_phase.add_file_reference(app_group.new_file('FollowedPlayers.swift'))
 app.resources_build_phase.add_file_reference(app_group.new_file('Assets.xcassets'))
 widget.source_build_phase.add_file_reference(widget_group.new_file('ChessPositionWidget.swift'))
 app.add_dependency(widget)

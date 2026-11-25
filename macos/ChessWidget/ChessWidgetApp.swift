@@ -29,7 +29,7 @@ struct ContentView: View {
     @State private var showSettings = false
     @State private var tokenRevision = 0
     @State private var lastEvaluation: (score: Int, ply: Int)?
-    @State private var clockText = "? – ?"
+    @State private var clockText: String?
     @State private var broadcastClock: BroadcastClock?
     @State private var currentNotificationTitle = "Chess Broadcast"
     @AppStorage("moveNotificationsEnabled") private var notificationsEnabled = false
@@ -80,6 +80,7 @@ struct ContentView: View {
                     else { notificationsEnabled = false }
                 }
             ))
+            FollowedPlayersView(tokenRevision: tokenRevision)
             HStack {
                 Picker("Broadcast", selection: $roundID) {
                     Text("Select a broadcast").tag("")
@@ -145,7 +146,13 @@ struct ContentView: View {
             }
         }
         .onDisappear { engine.shutdown() }
-        .task { await loadBroadcasts() }
+        .task {
+            await loadBroadcasts()
+            if roundID.isEmpty, let selection,
+               broadcasts.contains(where: { $0.id == selection.round && $0.round.ongoing == true }) {
+                roundID = selection.round
+            }
+        }
         .task(id: "\(selection?.round ?? "")/\(selection?.game ?? "")/\(tokenRevision)") { await monitorSelection() }
         .sheet(isPresented: $showSettings) {
             TokenSettings {
@@ -179,7 +186,7 @@ struct ContentView: View {
         if selection?.round != roundID || selection?.game != game.id {
             engine.reset()
             lastEvaluation = nil
-            clockText = "? – ?"
+            clockText = nil
             broadcastClock = nil
             currentNotificationTitle = "Chess Broadcast"
         }
@@ -229,13 +236,13 @@ struct ContentView: View {
         } else {
             moveText = "\(game.moves.count - previous.moves.count) new moves"
         }
-        content.body = "\(moveText)  \(game.clocks)" + (evaluation.map { "  \($0)" } ?? "")
+        content.body = moveText + (visibleClocks(game.clocks).map { "  \($0)" } ?? "") + (evaluation.map { "  \($0)" } ?? "")
         content.sound = .default
         do { try await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)) }
         catch { await MainActor.run { message = "Could not send notification: \(error.localizedDescription)" } }
     }
 
-    func notifyEvaluation(title: String, previous: Int, current: Int, gameTitle: String, clocks: String) async {
+    func notifyEvaluation(title: String, previous: Int, current: Int, gameTitle: String, clocks: String?) async {
         guard notificationsEnabled else { return }
         func label(_ score: Int) -> String {
             if abs(score) >= 100_000 { return score > 0 ? "mate for White" : "mate for Black" }
@@ -243,7 +250,7 @@ struct ContentView: View {
         }
         let content = UNMutableNotificationContent()
         content.title = gameTitle
-        content.body = "\(title) · \(label(previous)) → \(label(current)) · \(clocks)"
+        content.body = "\(title) · \(label(previous)) → \(label(current))" + (clocks.map { " · \($0)" } ?? "")
         content.sound = .default
         do { try await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)) }
         catch { await MainActor.run { message = "Could not send notification: \(error.localizedDescription)" } }
@@ -253,7 +260,7 @@ struct ContentView: View {
         guard notificationsEnabled, let result = game.result else { return }
         let content = UNMutableNotificationContent()
         content.title = notificationTitle(game, fallback: name)
-        content.body = "Game finished · \(result) · \(game.clocks)"
+        content.body = "Game finished · \(result)" + (visibleClocks(game.clocks).map { " · \($0)" } ?? "")
         content.sound = .default
         do { try await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)) }
         catch { await MainActor.run { message = "Could not send notification: \(error.localizedDescription)" } }
@@ -294,7 +301,7 @@ struct ContentView: View {
                     guard !Task.isCancelled, let game = parseStreamGame(pgn, gameID: selected.game) else { return }
                     streamStatus = "Live broadcast connected"
                     currentNotificationTitle = notificationTitle(game, fallback: selected.name)
-                    clockText = game.clocks
+                    clockText = visibleClocks(game.clocks)
                     if needsClockSync || previous?.moves != game.moves || previous?.clocks != game.clocks || previous?.result != game.result {
                         broadcastClock = BroadcastClock(game: game)
                         needsClockSync = false
@@ -340,6 +347,8 @@ struct TokenSettings: View {
     @State private var token = ""
     @State private var hasToken = false
     @State private var errorMessage = ""
+    @State private var checkMessage = ""
+    @State private var checking = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -349,8 +358,10 @@ struct TokenSettings: View {
             Text(hasToken ? "A token is saved." : "No token saved.").foregroundStyle(.secondary)
             SecureField(hasToken ? "Enter a replacement token" : "Paste your Lichess token", text: $token)
             if !errorMessage.isEmpty { Text(errorMessage).foregroundStyle(.red) }
+            if !checkMessage.isEmpty { Text(checkMessage).font(.callout).textSelection(.enabled) }
             HStack {
                 Button("Remove token") { removeToken() }.disabled(!hasToken)
+                Button(checking ? "Checking…" : "Check token") { Task { await checkToken() } }.disabled(!hasToken || checking)
                 Spacer()
                 Button("Close") { dismiss() }
                 Button("Save") { saveToken() }.disabled(token.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -369,12 +380,26 @@ struct TokenSettings: View {
             token = ""
             hasToken = true
             errorMessage = ""
+            checkMessage = ""
             onChange()
             dismiss()
         } catch { errorMessage = error.localizedDescription }
     }
     func removeToken() {
-        do { try deleteLichessToken(); token = ""; hasToken = false; errorMessage = ""; onChange() }
+        do { try deleteLichessToken(); token = ""; hasToken = false; errorMessage = ""; checkMessage = ""; onChange() }
         catch { errorMessage = error.localizedDescription }
+    }
+    @MainActor func checkToken() async {
+        checking = true
+        defer { checking = false }
+        do {
+            guard let details = try await checkLichessToken() else {
+                checkMessage = "The saved token is invalid, expired, or missing."
+                return
+            }
+            let scopes = Set(details.scopes.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) })
+            let missing = ["study:read", "follow:read"].filter { !scopes.contains($0) }
+            checkMessage = "Token belongs to \(details.userId). " + (missing.isEmpty ? "Permissions study:read and follow:read are present." : "Missing permissions: \(missing.joined(separator: ", ")).")
+        } catch { checkMessage = "Token check failed: \(error.localizedDescription)" }
     }
 }

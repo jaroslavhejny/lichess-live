@@ -13,6 +13,7 @@
 		29F37E4084C2CB354995EC95 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 61DA9756D0F8EAC30A2792E5 /* Cocoa.framework */; };
 		2DD4F6554EB7C0123FC397E7 /* ChessWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = 44BAB900EA8952C17C0AFD9E /* ChessWidgetExtension.appex */; };
 		2E7928C77AF4B4C316128683 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 61DA9756D0F8EAC30A2792E5 /* Cocoa.framework */; };
+		42680B46C7342BC07352B0CE /* FollowedPlayers.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2DEA795DD12B4B279EEC22C /* FollowedPlayers.swift */; };
 		45D2C181DDB8377CD149D082 /* ChessData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FB1FB1830CC84C1A0907B36 /* ChessData.swift */; };
 		4D2563093B6C91A910A1C964 /* ChessPositionWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26CCC73C8B7B09E2FA4E9020 /* ChessPositionWidget.swift */; };
 		51E494908F572DE5D6231964 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 338826D92B9009DCC48ACE00 /* Assets.xcassets */; };
@@ -62,6 +63,7 @@
 		8AFF62841881A8DB513F24B8 /* StockfishEngine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StockfishEngine.swift; sourceTree = "<group>"; };
 		96D4AB679722217E39B17E23 /* Pieces.xcassets */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.assetcatalog; path = Pieces.xcassets; sourceTree = "<group>"; };
 		BB9DA93B9C8EC7DCE7FCB04F /* BroadcastStream.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BroadcastStream.swift; sourceTree = "<group>"; };
+		C2DEA795DD12B4B279EEC22C /* FollowedPlayers.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FollowedPlayers.swift; sourceTree = "<group>"; };
 		C79531820B093FABF41F6110 /* ChessWidget.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChessWidget.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9A7BF89AD73FC994C1C331B /* ChessWidgetApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChessWidgetApp.swift; sourceTree = "<group>"; };
 		F17AE885E6A87DE8875137FF /* LichessToken.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LichessToken.swift; sourceTree = "<group>"; };
@@ -143,6 +145,7 @@
 				BB9DA93B9C8EC7DCE7FCB04F /* BroadcastStream.swift */,
 				8AFF62841881A8DB513F24B8 /* StockfishEngine.swift */,
 				50B03C46A522498C51CFD6C2 /* ClockPanel.swift */,
+				C2DEA795DD12B4B279EEC22C /* FollowedPlayers.swift */,
 			);
 			path = ChessWidget;
 			sourceTree = "<group>";
@@ -292,6 +295,7 @@
 				89A54E3AD4899545B8B0ECF4 /* LichessToken.swift in Sources */,
 				B7502E1941B83846AD3209A9 /* StockfishEngine.swift in Sources */,
 				9EC3CC8B6DC78AFF9D44F4EE /* ClockPanel.swift in Sources */,
+				42680B46C7342BC07352B0CE /* FollowedPlayers.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

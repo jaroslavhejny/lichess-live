@@ -12,8 +12,11 @@ struct BroadcastClock {
         guard values.count == 2, let fen = game.fen else { return nil }
         let fields = fen.split(separator: " ")
         guard fields.count > 1, fields[1] == "w" || fields[1] == "b" else { return nil }
-        white = Self.seconds(values[0])
-        black = Self.seconds(values[1])
+        let whiteTime = Self.seconds(values[0])
+        let blackTime = Self.seconds(values[1])
+        guard whiteTime != nil || blackTime != nil else { return nil }
+        white = whiteTime
+        black = blackTime
         whiteToMove = fields[1] == "w"
         self.receivedAt = receivedAt
         running = game.result == nil
@@ -51,8 +54,8 @@ struct ClockPanel: View {
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { timeline in
             HStack(spacing: 14) {
-                clockLabel("White", whiteSide: true, now: timeline.date)
-                clockLabel("Black", whiteSide: false, now: timeline.date)
+                if clock.white != nil { clockLabel("White", whiteSide: true, now: timeline.date) }
+                if clock.black != nil { clockLabel("Black", whiteSide: false, now: timeline.date) }
                 if clock.running {
                     VStack(alignment: .trailing, spacing: 2) {
                         Text("≈ \(BroadcastClock.format(clock.elapsed(at: timeline.date)))")
