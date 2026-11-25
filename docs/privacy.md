@@ -2,7 +2,7 @@
 
 Last updated: [DATE]
 
-[DEVELOPER NAME] operates Chess Broadcast Widget. For privacy questions, contact [SUPPORT EMAIL].
+[DEVELOPER NAME] operates Chess Broadcast Widget. For privacy questions, contact jaroslavhejny(at)email.cz.
 
 ## Lichess requests
 
@@ -22,4 +22,4 @@ If you enable notifications and grant macOS permission, the app can display noti
 
 ## Contact
 
-For questions about this policy, contact [SUPPORT EMAIL].
+For questions about this policy, contact jaroslavhejny(at)email.cz.

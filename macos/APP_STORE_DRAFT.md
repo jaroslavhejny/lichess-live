@@ -28,9 +28,9 @@ Chess Broadcast Widget is an independent app and is not affiliated with Lichess 
 
 **Keywords:** chess,broadcast,live,widget,board,lichess,stockfish,tournament,analysis,notifications
 
-**Support URL:** [PUBLIC SUPPORT URL WITH CONTACT DETAILS]
+**Support URL:** https://jaroslavhejny.github.io/lichess-live/
 
-**Privacy policy URL:** [PUBLIC PRIVACY POLICY URL]
+**Privacy policy URL:** https://jaroslavhejny.github.io/lichess-live/privacy.html
 
 ## Screenshot plan
 
@@ -52,7 +52,7 @@ Replace the placeholders and review this draft against the final build, support 
 
 Last updated: [DATE]
 
-[DEVELOPER NAME] operates Chess Broadcast Widget. Contact: [SUPPORT EMAIL OR CONTACT URL].
+[DEVELOPER NAME] operates Chess Broadcast Widget. Contact: jaroslavhejny(at)email.cz.
 
 **Lichess requests.** The app connects to Lichess to retrieve broadcasts, game positions, and related information. If you use followed-player features, the app also requests your following list and player statuses. These requests are made to Lichess and are subject to its privacy policy: https://lichess.org/privacy. Like other internet services, Lichess may receive network information such as your IP address.
 
@@ -62,7 +62,7 @@ Last updated: [DATE]
 
 **Notifications.** If you enable notifications and grant macOS permission, the app can display notifications about games and followed-player status. You can turn these off in the app or in macOS System Settings.
 
-**Contact.** For questions about this policy, contact [SUPPORT EMAIL OR CONTACT URL].
+**Contact.** For questions about this policy, contact jaroslavhejny(at)email.cz.
 
 ## Before submission
 

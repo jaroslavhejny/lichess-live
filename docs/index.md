@@ -4,7 +4,7 @@ Chess Broadcast Widget helps you follow Lichess broadcasts on your Mac.
 
 ## Contact
 
-For help, feedback, or privacy questions, contact **[SUPPORT EMAIL]**.
+For help, feedback, or privacy questions, contact **jaroslavhejny(at)email.cz**.
 
 Please do not include your Lichess access token in support requests.
 
