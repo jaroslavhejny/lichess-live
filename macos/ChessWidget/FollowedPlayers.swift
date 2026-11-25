@@ -2,20 +2,20 @@ import Foundation
 import SwiftUI
 import UserNotifications
 
-private struct FollowedUser: Decodable, Identifiable {
+struct FollowedUser: Decodable, Identifiable {
     let id: String
     let username: String
     let title: String?
 }
 
-private struct UserStatus: Decodable {
+struct UserStatus: Decodable {
     let id: String
     let online: Bool?
     let playing: Bool?
     let playingId: String?
 }
 
-private struct FollowedPlayer: Identifiable {
+struct FollowedPlayer: Identifiable {
     let user: FollowedUser
     let status: UserStatus?
     var id: String { user.id }
@@ -60,19 +60,16 @@ private enum FollowedError: LocalizedError {
 }
 
 struct FollowedPlayersView: View {
-    let tokenRevision: Int
-    @State private var players: [FollowedPlayer] = []
-    @State private var cachedUsers: [FollowedUser]?
-    @State private var loaded = false
-    @State private var loading = false
-    @State private var errorMessage = ""
+    @ObservedObject var model: FollowedPlayersModel
     @State private var expanded = true
     @State private var showOffline = false
-    @State private var nextRetry = Date.distantPast
-    @State private var retryDelay: TimeInterval = 60
     @AppStorage("moveNotificationsEnabled") private var notificationsEnabled = false
     @AppStorage("friendStatusNotificationsEnabled") private var friendNotificationsEnabled = true
-
+    private var players: [FollowedPlayer] { model.players }
+    private var loaded: Bool { model.loaded }
+    private var loading: Bool { model.loading }
+    private var errorMessage: String { model.errorMessage }
+    private var nextRetry: Date { model.nextRetry }
     private var online: [FollowedPlayer] { players.filter { $0.isOnline == true } }
     private var offline: [FollowedPlayer] { players.filter { $0.isOnline == false } }
     private var unknown: [FollowedPlayer] { players.filter { $0.isOnline == nil } }
@@ -106,25 +103,12 @@ struct FollowedPlayersView: View {
                 Text("Followed players").font(.headline)
                 if loaded { Text("\(online.count) online").font(.caption).foregroundStyle(.secondary) }
                 Spacer()
-                Button { Task { await refresh(reloadFollowing: true) } } label: { Image(systemName: "arrow.clockwise") }
+                Button { Task { await model.refresh(reloadFollowing: true) } } label: { Image(systemName: "arrow.clockwise") }
                     .buttonStyle(.borderless).disabled(loading || Date() < nextRetry)
                     .help("Refresh followed players")
             }
         }
         .padding(12).background(.quaternary, in: RoundedRectangle(cornerRadius: 10))
-        .task(id: tokenRevision) {
-            while loading && !Task.isCancelled {
-                do { try await Task.sleep(for: .milliseconds(100)) } catch { return }
-            }
-            players = []
-            cachedUsers = nil
-            loaded = false
-            await refresh(reloadFollowing: true)
-            while !Task.isCancelled {
-                do { try await Task.sleep(for: .seconds(90)) } catch { return }
-                await refresh(reloadFollowing: false)
-            }
-        }
     }
 
     private func playerRow(_ player: FollowedPlayer) -> some View {
@@ -139,7 +123,40 @@ struct FollowedPlayersView: View {
         }.padding(.vertical, 4)
     }
 
-    @MainActor private func refresh(reloadFollowing: Bool) async {
+}
+
+@MainActor
+final class FollowedPlayersModel: ObservableObject {
+    @Published var players: [FollowedPlayer] = []
+    @Published var loaded = false
+    @Published var loading = false
+    @Published var errorMessage = ""
+    @Published var nextRetry = Date.distantPast
+    private var cachedUsers: [FollowedUser]?
+    private var retryDelay: TimeInterval = 60
+    private var task: Task<Void, Never>?
+    private var baselineNeeded = true
+    @AppStorage("moveNotificationsEnabled") private var notificationsEnabled = false
+    @AppStorage("friendStatusNotificationsEnabled") private var friendNotificationsEnabled = true
+
+    func start() { guard task == nil else { return }; restart() }
+    func suspend() { task?.cancel(); task = nil; baselineNeeded = true }
+    func restart() {
+        suspend()
+        cachedUsers = nil
+        task = Task {
+            while loading && !Task.isCancelled {
+                do { try await Task.sleep(for: .milliseconds(100)) } catch { return }
+            }
+            await refresh(reloadFollowing: true)
+            while !Task.isCancelled {
+                do { try await Task.sleep(for: .seconds(90)) } catch { return }
+                await refresh(reloadFollowing: false)
+            }
+        }
+    }
+
+    func refresh(reloadFollowing: Bool) async {
         guard !loading, Date() >= nextRetry else { return }
         loading = true
         defer { loading = false }
@@ -156,7 +173,7 @@ struct FollowedPlayersView: View {
                 return $0.user.username.localizedCaseInsensitiveCompare($1.user.username) == .orderedAscending
             }
             errorMessage = ""
-            if loaded && notificationsEnabled && friendNotificationsEnabled {
+            if loaded && !baselineNeeded && notificationsEnabled && friendNotificationsEnabled {
                 let oldByID = Dictionary(players.map { ($0.id.lowercased(), $0) }, uniquingKeysWith: { first, _ in first })
                 for player in updated {
                     guard let old = oldByID[player.id.lowercased()], let wasOnline = old.isOnline, let isOnline = player.isOnline else { continue }
@@ -170,11 +187,13 @@ struct FollowedPlayersView: View {
                     if let message { await notifyStatus(player, message: message) }
                 }
             }
+            baselineNeeded = false
             players = updated
             loaded = true
             retryDelay = 60
         } catch {
             guard !Task.isCancelled else { return }
+            baselineNeeded = true
             if let error = error as? LichessHTTPError, error.status == 429 {
                 nextRetry = Date().addingTimeInterval(retryDelay)
                 errorMessage = "Lichess rate limit; the player list will retry later."

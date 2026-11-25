@@ -75,6 +75,10 @@ struct PositionWidgetView: View {
                                     .padding(3)
                             }
                         }
+                        .overlay(alignment: .topTrailing) {
+                            Text(entry.date, style: .relative).font(.system(size: 9, weight: .semibold))
+                                .padding(3).background(.regularMaterial, in: RoundedRectangle(cornerRadius: 4)).padding(3)
+                        }
                 }
             } else {
                 VStack(spacing: 8) {
@@ -102,6 +106,10 @@ struct PositionWidgetView: View {
             if let clocks = visibleClocks(entry.details?.clocks) {
                 metric("CLOCKS · LAST REPORTED", value: clocks)
             }
+            HStack(spacing: 3) {
+                Text(entry.status.isEmpty ? "Updated" : entry.status + " ·")
+                Text(entry.date, style: .relative)
+            }.font(.system(size: 8)).foregroundStyle(.secondary).lineLimit(1)
         }
         .padding(.horizontal, 10).padding(.vertical, 8)
     }

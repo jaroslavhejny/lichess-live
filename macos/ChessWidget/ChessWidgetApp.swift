@@ -1,8 +1,12 @@
 import SwiftUI
 import WidgetKit
 import UserNotifications
+import AppKit
 
 final class NotificationDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
+    var model: AppModel?
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+    func applicationWillTerminate(_ notification: Notification) { model?.shutdown() }
     func applicationDidFinishLaunching(_ notification: Notification) {
         UNUserNotificationCenter.current().delegate = self
     }
@@ -14,30 +18,49 @@ final class NotificationDelegate: NSObject, NSApplicationDelegate, UNUserNotific
 @main
 struct ChessWidgetApp: App {
     @NSApplicationDelegateAdaptor(NotificationDelegate.self) private var notificationDelegate
-    var body: some Scene { WindowGroup { ContentView() }.windowResizability(.contentMinSize) }
+    @StateObject private var model = AppModel()
+
+    var body: some Scene {
+        Window("Chess Broadcast", id: "main") {
+            ContentView(model: model, engine: model.engine)
+                .onAppear { notificationDelegate.model = model; model.start() }
+        }.windowResizability(.contentMinSize)
+        MenuBarExtra {
+            MenuBarContent(model: model)
+        } label: {
+            Image(systemName: model.selection == nil ? "circle" : (model.streamStatus == "Live broadcast connected" ? "dot.radiowaves.left.and.right" : "wifi.exclamationmark"))
+        }
+    }
+}
+
+struct MenuBarContent: View {
+    @ObservedObject var model: AppModel
+    @Environment(\.openWindow) private var openWindow
+    var body: some View {
+        Text(model.selection?.name ?? "No game selected")
+        Text(model.streamStatus.isEmpty ? "Not monitoring" : model.streamStatus)
+        Divider()
+        Button("Open Chess Broadcast") { openWindow(id: "main"); NSApp.activate(ignoringOtherApps: true) }
+        Button("Quit Chess Broadcast") { model.shutdown(); NSApp.terminate(nil) }
+    }
 }
 
 struct ContentView: View {
-    @StateObject private var engine = StockfishEngine()
-    @State private var broadcasts: [Broadcast] = []
-    @State private var games: [Game] = []
-    @State private var roundID = ""
-    @State private var message = ""
-    @State private var selection = loadSelection()
-    @State private var loading = false
-    @State private var streamStatus = ""
+    @ObservedObject var model: AppModel
+    @ObservedObject var engine: StockfishEngine
     @State private var showSettings = false
-    @State private var tokenRevision = 0
-    @State private var lastEvaluation: (score: Int, ply: Int)?
-    @State private var clockText: String?
-    @State private var broadcastClock: BroadcastClock?
-    @State private var currentNotificationTitle = "Chess Broadcast"
     @AppStorage("moveNotificationsEnabled") private var notificationsEnabled = false
     @AppStorage("liveBroadcastsOnly") private var liveBroadcastsOnly = false
     @AppStorage("runningGamesOnly") private var runningGamesOnly = false
-    @AppStorage("streamRetryAfter") private var streamRetryAfter = 0.0
-    @AppStorage("streamRateLimitDelay") private var streamRateLimitDelay = 0.0
 
+    private var broadcasts: [Broadcast] { model.broadcasts }
+    private var games: [Game] { model.games }
+    private var selection: Selection? { model.selection }
+    private var streamStatus: String { model.streamStatus }
+    private var broadcastClock: BroadcastClock? { model.broadcastClock }
+    private var message: String { model.message }
+    private var loading: Bool { model.loading }
+    private var roundID: String { model.roundID }
     private var visibleBroadcasts: [Broadcast] {
         liveBroadcastsOnly ? broadcasts.filter { $0.round.ongoing == true } : broadcasts
     }
@@ -76,19 +99,19 @@ struct ContentView: View {
             Toggle("Notifications", isOn: Binding(
                 get: { notificationsEnabled },
                 set: { enabled in
-                    if enabled { Task { await enableNotifications() } }
+                    if enabled { Task { await model.enableNotifications() } }
                     else { notificationsEnabled = false }
                 }
             ))
-            FollowedPlayersView(tokenRevision: tokenRevision)
+            FollowedPlayersView(model: model.followed)
             HStack {
-                Picker("Broadcast", selection: $roundID) {
+                Picker("Broadcast", selection: $model.roundID) {
                     Text("Select a broadcast").tag("")
                     ForEach(visibleBroadcasts) { broadcast in
                         Text(broadcast.label).tag(broadcast.id)
                     }
                 }
-                Button("Refresh") { Task { await loadBroadcasts(); await loadGames(roundID) } }.disabled(loading)
+                Button("Refresh") { Task { await model.loadBroadcasts(); await model.loadGames(roundID) } }.disabled(loading)
             }
             Toggle("Live broadcasts only", isOn: $liveBroadcastsOnly)
             if !roundID.isEmpty { Toggle("Running games only", isOn: $runningGamesOnly) }
@@ -99,7 +122,7 @@ struct ContentView: View {
                 List(visibleGames) { game in
                     let selected = selection?.round == roundID && selection?.game == game.id
                     HStack {
-                        Button { select(game) } label: {
+                        Button { model.select(game) } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                                     .foregroundStyle(selected ? Color.accentColor : Color.secondary)
@@ -125,47 +148,110 @@ struct ContentView: View {
             Text("The widget updates periodically; macOS controls the refresh schedule.").font(.caption).foregroundStyle(.secondary)
         }
         .padding(20).frame(minWidth: 680, minHeight: 440)
-        .onAppear {
-            engine.onEvaluation = { score, ply, _ in
-                if let selection, let fen = engine.evaluatedFEN, let evaluation = engine.evaluation,
-                   saveEvaluation(evaluation, fen: fen, for: selection) {
-                    WidgetCenter.shared.reloadTimelines(ofKind: "ChessPositionBoardV3")
-                }
-                if let previous = lastEvaluation, ply == previous.ply + 1 {
-                    let change = score - previous.score
-                    let movedWhite = !ply.isMultiple(of: 2)
-                    let gameTitle = currentNotificationTitle
-                    let clocks = clockText
-                    if (movedWhite ? -change : change) >= 100 {
-                        Task { await notifyEvaluation(title: "Possible blunder", previous: previous.score, current: score, gameTitle: gameTitle, clocks: clocks) }
-                    } else if abs(change) >= 50 {
-                        Task { await notifyEvaluation(title: "Evaluation change", previous: previous.score, current: score, gameTitle: gameTitle, clocks: clocks) }
-                    }
-                }
-                lastEvaluation = (score, ply)
+        .onAppear { model.start() }
+        .sheet(isPresented: $showSettings) {
+            TokenSettings {
+                model.tokenChanged()
+                WidgetCenter.shared.reloadAllTimelines()
+                Task { await model.loadBroadcasts(); await model.loadGames(model.roundID) }
             }
         }
-        .onDisappear { engine.shutdown() }
-        .task {
+        .onChange(of: model.roundID) { _, id in Task { await model.loadGames(id) } }
+        .onChange(of: liveBroadcastsOnly) { _, enabled in
+            if enabled, !roundID.isEmpty, !visibleBroadcasts.contains(where: { $0.id == roundID }) { model.roundID = "" }
+        }
+    }
+}
+
+@MainActor
+final class AppModel: ObservableObject {
+    let engine = StockfishEngine()
+    let followed = FollowedPlayersModel()
+    @Published var broadcasts: [Broadcast] = []
+    @Published var games: [Game] = []
+    @Published var roundID = ""
+    @Published var message = ""
+    @Published var selection = loadSelection()
+    @Published var loading = false
+    @Published var streamStatus = ""
+    @Published var broadcastClock: BroadcastClock?
+    private var lastEvaluation: (score: Int, ply: Int)?
+    private var clockText: String?
+    private var currentNotificationTitle = "Chess Broadcast"
+    @AppStorage("moveNotificationsEnabled") private var notificationsEnabled = false
+    @AppStorage("streamRetryAfter") private var streamRetryAfter = 0.0
+    @AppStorage("streamRateLimitDelay") private var streamRateLimitDelay = 0.0
+    private var monitoringTask: Task<Void, Never>?
+    private var startupTask: Task<Void, Never>?
+    private var observers: [NSObjectProtocol] = []
+    private var started = false
+
+    func start() {
+        guard !started else { return }
+        started = true
+        engine.onEvaluation = { [weak self] score, ply, _ in
+            guard let self else { return }
+            if let selection = self.selection, let fen = self.engine.evaluatedFEN, let evaluation = self.engine.evaluation,
+               saveEvaluation(evaluation, fen: fen, for: selection) {
+                WidgetCenter.shared.reloadTimelines(ofKind: "ChessPositionBoardV3")
+            }
+            if let previous = self.lastEvaluation, ply == previous.ply + 1 {
+                let change = score - previous.score
+                let movedWhite = !ply.isMultiple(of: 2)
+                let gameTitle = self.currentNotificationTitle
+                let clocks = self.clockText
+                if (movedWhite ? -change : change) >= 100 {
+                    Task { await self.notifyEvaluation(title: "Possible blunder", previous: previous.score, current: score, gameTitle: gameTitle, clocks: clocks) }
+                } else if abs(change) >= 50 {
+                    Task { await self.notifyEvaluation(title: "Evaluation change", previous: previous.score, current: score, gameTitle: gameTitle, clocks: clocks) }
+                }
+            }
+            self.lastEvaluation = (score, ply)
+        }
+        followed.start()
+        restartMonitoring()
+        startupTask = Task {
             await loadBroadcasts()
             if roundID.isEmpty, let selection,
                broadcasts.contains(where: { $0.id == selection.round && $0.round.ongoing == true }) {
                 roundID = selection.round
             }
         }
-        .task(id: "\(selection?.round ?? "")/\(selection?.game ?? "")/\(tokenRevision)") { await monitorSelection() }
-        .sheet(isPresented: $showSettings) {
-            TokenSettings {
-                tokenRevision += 1
-                WidgetCenter.shared.reloadAllTimelines()
-                Task { await loadBroadcasts(); await loadGames(roundID) }
-            }
-        }
-        .onChange(of: roundID) { _, id in Task { await loadGames(id) } }
-        .onChange(of: liveBroadcastsOnly) { _, enabled in
-            if enabled, !roundID.isEmpty, !visibleBroadcasts.contains(where: { $0.id == roundID }) { roundID = "" }
+        let center = NSWorkspace.shared.notificationCenter
+        observers.append(center.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in self?.suspendForSleep() }
+        })
+        observers.append(center.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in self?.wake() }
+        })
+    }
+    private func restartMonitoring() {
+        let previousTask = monitoringTask
+        previousTask?.cancel()
+        monitoringTask = Task {
+            await previousTask?.value
+            guard !Task.isCancelled else { return }
+            await monitorSelection()
         }
     }
+    func tokenChanged() { followed.restart(); restartMonitoring() }
+    private func suspendForSleep() {
+        monitoringTask?.cancel()
+        followed.suspend()
+        lastEvaluation = nil
+        engine.reset()
+        streamStatus = "Mac sleeping; reconnecting after wake."
+    }
+    private func wake() { followed.restart(); restartMonitoring() }
+    func shutdown() {
+        monitoringTask?.cancel(); monitoringTask = nil
+        startupTask?.cancel(); startupTask = nil
+        followed.suspend()
+        engine.shutdown()
+        for observer in observers { NSWorkspace.shared.notificationCenter.removeObserver(observer) }
+        observers.removeAll()
+    }
+
     @MainActor func loadBroadcasts() async {
         loading = true
         defer { loading = false }
@@ -200,6 +286,7 @@ struct ContentView: View {
             savePosition(fen, for: selected, white: game.players?.first?.name, black: game.players?.dropFirst().first?.name)
         }
         selection = selected
+        restartMonitoring()
         message = "Game selected. Add or refresh the Chess Position & Game widget."
         WidgetCenter.shared.reloadAllTimelines()
     }
@@ -290,11 +377,15 @@ struct ContentView: View {
             do {
                 streamStatus = "Connecting to the broadcast…"
                 try await streamRound(selected.round, onConnected: {
+                    guard !Task.isCancelled else { return }
                     needsClockSync = true
+                    previous = nil
+                    lastEvaluation = nil
+                    engine.reset()
                     streamRetryAfter = 0
                     streamRateLimitDelay = 0
                     streamStatus = "Connected; waiting for the selected game…"
-                }) { pgn in
+                }) { [self] pgn in
                     guard !Task.isCancelled, let game = parseStreamGame(pgn, gameID: selected.game) else { return }
                     streamStatus = "Live broadcast connected"
                     currentNotificationTitle = notificationTitle(game, fallback: selected.name)
@@ -309,13 +400,19 @@ struct ContentView: View {
                             let evaluation = game.fen != nil && game.fen == engine.evaluatedFEN ? engine.evaluation : nil
                             await notifyMove(game, previous: old, fallbackName: selected.name, evaluation: evaluation)
                         }
+                        guard !Task.isCancelled else { return }
                         updateWidgetPosition(game, for: selected)
+                    }
+                    if let old = previous, game.moves == old.moves, game.clocks != old.clocks, let fen = game.fen {
+                        savePosition(fen, for: selected, white: game.white, black: game.black, clocks: game.clocks)
+                        WidgetCenter.shared.reloadTimelines(ofKind: "ChessPositionBoardV3")
                     }
                     if let old = previous, old.result == nil, game.result != nil {
                         await notifyFinished(game, name: selected.name)
                     }
                     previous = game
                 }
+                if Task.isCancelled { return }
                 streamStatus = "Broadcast disconnected; reconnecting…"
             } catch StreamError.rateLimited {
                 if Task.isCancelled { return }
