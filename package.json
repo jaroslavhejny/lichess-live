@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node watch.js",
     "broadcast": "node select-broadcast.js",
+    "broadcast:inspect": "node inspect-broadcast.js",
     "test": "node test-notification.js"
   },
   "dependencies": {

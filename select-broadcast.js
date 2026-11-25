@@ -33,14 +33,20 @@ try {
   const data = await getJson('https://lichess.org/api/broadcast/top');
   const broadcasts = (data.active || []).filter(item => item.round?.ongoing && item.round?.id);
   if (!broadcasts.length) throw new Error('There are currently no live broadcasts available.');
-  broadcasts.forEach((item, index) => console.log(`${index + 1}. ${item.tour?.name || 'Broadcast'} – ${item.round.name}`));
+  broadcasts.forEach((item, index) => console.log(`${index + 1}. ${item.tour?.name || 'Broadcast'} – ${item.round.name}${item.tour?.info?.tc ? ` (${item.tour.info.tc})` : ''}`));
   const broadcast = await choose(rl, broadcasts, 'Choose a broadcast (number, q = quit): ');
   if (broadcast) {
     const round = broadcast.round.id;
     const detail = await getJson(`https://lichess.org/api/broadcast/-/-/${round}`);
     const games = detail.games || [];
     if (!games.length) throw new Error('There are no games available in this round yet.');
-    games.forEach((game, index) => console.log(`${index + 1}. ${game.name || game.id} ${game.status && game.status !== '*' ? `(${game.status})` : ''}`));
+    games.forEach((game, index) => {
+      const players = game.players;
+      const name = players?.length === 2 && players.every(player => player?.name)
+        ? players.map(player => `${player.name}${player.rating ? ` (${player.rating})` : ''}`).join(' - ')
+        : game.name || game.id;
+      console.log(`${index + 1}. ${name}${game.status && game.status !== '*' ? ` (${game.status})` : ''}`);
+    });
     const game = await choose(rl, games, 'Choose a game (number, q = quit): ');
     if (game) {
       if (!/^[a-zA-Z0-9]{8}$/.test(game.id)) throw new Error('The game does not have a valid ID.');

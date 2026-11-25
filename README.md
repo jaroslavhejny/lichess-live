@@ -9,6 +9,8 @@ npm run broadcast
 
 Choose a live broadcast and then a game from the numbered lists. The available broadcasts depend on what is live on Lichess. If the game finishes while you are choosing, the watcher exits after receiving its result. Press Ctrl+C to stop watching.
 
+Run `npm run broadcast:inspect` to print the API data for the first live broadcast and its round, including the first game. This is useful for inspecting which tournament details Lichess provides.
+
 Keep the terminal and computer running; sleep pauses monitoring. Notifications currently require macOS: allow Script Editor notifications, including in Focus mode. On other systems, messages appear in the terminal.
 
 To watch the default broadcast round, use `npm start`. Its default is [game 1 of the 2026 World Chess Championship](https://lichess.org/broadcast/fide-world-chess-championship-2026/game-1/xLgOJ6cb); it does not automatically select the latest round. To specify another round by its eight-character ID:
