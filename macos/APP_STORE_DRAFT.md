@@ -50,9 +50,9 @@ Replace the placeholders and review this draft against the final build, support 
 
 ### Privacy Policy for Chess Broadcast Widget
 
-Last updated: [DATE]
+Last updated: November 26, 2026
 
-[DEVELOPER NAME] operates Chess Broadcast Widget. Contact: jaroslavhejny(at)email.cz.
+Jaroslav Hejný operates Chess Broadcast Widget. Contact: jaroslavhejny(at)email.cz.
 
 **Lichess requests.** The app connects to Lichess to retrieve broadcasts, game positions, and related information. If you use followed-player features, the app also requests your following list and player statuses. These requests are made to Lichess and are subject to its privacy policy: https://lichess.org/privacy. Like other internet services, Lichess may receive network information such as your IP address.
 

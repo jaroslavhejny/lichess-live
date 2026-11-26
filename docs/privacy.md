@@ -1,8 +1,8 @@
 # Privacy Policy for Chess Broadcast Widget
 
-Last updated: [DATE]
+Last updated: November 26, 2026
 
-[DEVELOPER NAME] operates Chess Broadcast Widget. For privacy questions, contact jaroslavhejny(at)email.cz.
+Jaroslav Hejný operates Chess Broadcast Widget. For privacy questions, contact jaroslavhejny(at)email.cz.
 
 ## Lichess requests
 
